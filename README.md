@@ -1,4 +1,6 @@
-![Poster](./poster.png)
+<p align="center">
+  <img src="./poster.png" width="100%" alt="React Docs MCP">
+</p>
 
 # React Docs MCP Server
 
