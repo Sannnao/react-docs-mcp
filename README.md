@@ -1,3 +1,5 @@
+![Poster](./poster.png)
+
 # React Docs MCP Server
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
