@@ -11,7 +11,7 @@
  */
 export function summarizeContent(content: string, maxLength: number = 1500): string {
   // Remove code blocks (can be very long)
-  let summary = content.replace(/```[\s\S]*?```/g, '[code example]');
+  let summary = content.replace(/```[\s\S]*?```/g, '');
 
   // Remove frontmatter if present
   summary = summary.replace(/^---[\s\S]*?---\n/, '');
@@ -20,7 +20,7 @@ export function summarizeContent(content: string, maxLength: number = 1500): str
   const paragraphs = summary
     .split(/\n\n+/)
     .map(p => p.trim())
-    .filter(p => p.length > 20 && !p.startsWith('#'));
+    .filter(p => p.length > 0 && !p.startsWith('#'));
 
   // Take first few paragraphs up to maxLength
   let result = '';
@@ -34,9 +34,6 @@ export function summarizeContent(content: string, maxLength: number = 1500): str
 
   // Build summary
   for (const para of paragraphs.slice(0, 3)) {
-    if (result.length + para.length > maxLength) {
-      break;
-    }
     result += para + '\n\n';
   }
 
@@ -65,10 +62,11 @@ export function extractStructure(content: string): string {
   let capturedFirstLine = false;
 
   for (const line of lines) {
-    // Match headings
+    // Match headings (h1-h3 only)
     const headingMatch = line.match(/^(#{1,3})\s+(.+)$/);
     if (headingMatch) {
       currentHeading = headingMatch[2];
+      // Don't use ** in the heading itself, since we're not displaying markdown
       structure.push(`\n**${currentHeading}**`);
       capturedFirstLine = false;
       continue;
@@ -76,7 +74,9 @@ export function extractStructure(content: string): string {
 
     // Capture first meaningful line after heading
     if (currentHeading && !capturedFirstLine && line.trim().length > 20) {
+      // Clean markdown formatting: *, _, `
       const cleaned = line.replace(/[*_`]/g, '').trim();
+      // Skip HTML tags and markdown links
       if (!cleaned.startsWith('<') && !cleaned.startsWith('[')) {
         structure.push(cleaned.slice(0, 100));
         capturedFirstLine = true;
