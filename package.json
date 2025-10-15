@@ -1,6 +1,6 @@
 {
   "name": "react-docs-mcp",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "MCP server providing AI agents with semantic search over React documentation",
   "main": "dist/index.js",
   "type": "module",
