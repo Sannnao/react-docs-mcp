@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "mcp__react-docs__search_react_docs"
+      "mcp__react-docs__search_react_docs",
+      "Bash(npm test)"
     ],
     "deny": [],
     "ask": []
