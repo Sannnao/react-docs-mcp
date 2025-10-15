@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__react-docs__search_react_docs"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

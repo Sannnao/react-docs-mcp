@@ -1,0 +1,63 @@
+{
+  "name": "react-docs-mcp",
+  "version": "1.0.0",
+  "description": "MCP server providing AI agents with semantic search over React documentation",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "react-docs-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
+    "postinstall": "node dist/index.js --version || echo 'Run: npx react-docs-mcp'"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "react",
+    "react-docs",
+    "documentation",
+    "ai",
+    "claude",
+    "cursor",
+    "semantic-search",
+    "embeddings",
+    "vector-search"
+  ],
+  "author": "Alex",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/react-docs-mcp.git"
+  },
+  "homepage": "https://github.com/yourusername/react-docs-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/react-docs-mcp/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.0",
+    "@xenova/transformers": "^2.17.2",
+    "fast-glob": "^3.3.3",
+    "gray-matter": "^4.0.3",
+    "remark": "^15.0.1",
+    "simple-git": "^3.28.0",
+    "strip-markdown": "^6.0.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

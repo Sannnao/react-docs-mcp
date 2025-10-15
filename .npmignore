@@ -1,0 +1,33 @@
+# Source files (only ship compiled dist/)
+src/
+tsconfig.json
+*.ts
+!*.d.ts
+
+# Development files
+node_modules/
+.DS_Store
+*.log
+
+# Data directory (docs cloned at runtime)
+data/
+
+# Documentation (except README)
+TECHNICAL_SPEC.md
+IMPLEMENTATION_SUMMARY.md
+VECTOR_SEARCH_UPDATE.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test files
+test/
+*.test.js
+*.spec.js
