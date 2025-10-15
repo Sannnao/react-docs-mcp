@@ -45,7 +45,11 @@
     "node": ">=18.0.0"
   },
   "files": [
-    "dist",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts.map",
+    "!dist/__tests__",
     "README.md",
     "LICENSE",
     "poster.png"

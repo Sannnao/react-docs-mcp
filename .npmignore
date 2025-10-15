@@ -1,33 +1,27 @@
-# Source files (only ship compiled dist/)
+# Source files
 src/
-tsconfig.json
-*.ts
-!*.d.ts
+
+# Tests
+dist/__tests__/
+**/*.test.js
+**/*.test.d.ts
+**/*.test.js.map
+**/*.test.d.ts.map
 
 # Development files
-node_modules/
-.DS_Store
-*.log
-
-# Data directory (docs cloned at runtime)
-data/
-
-# Documentation (except README)
-TECHNICAL_SPEC.md
-IMPLEMENTATION_SUMMARY.md
-VECTOR_SEARCH_UPDATE.md
+.claude/
+.vscode/
+*.md.map
+tsconfig.json
+vitest.config.ts
+LOCAL_TESTING.md
 
 # Git
 .git/
 .gitignore
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Test files
-test/
-*.test.js
-*.spec.js
+# Cache and temp
+node_modules/
+data/
+.DS_Store
+*.log
