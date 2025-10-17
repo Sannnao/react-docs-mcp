@@ -13,6 +13,7 @@ AI-powered semantic search over React documentation for Claude, Cursor, and othe
 ## 🚀 Installation (One Command)
 
 ### Claude Code
+
 ```bash
 claude mcp add --transport stdio react-docs -- npx react-docs-mcp
 ```
@@ -34,12 +35,15 @@ Edit: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) 
 
 ### Cursor
 
-**Settings** → **Features** → **MCP** → Add server:
+**Settings** → **Cursor settings** → **Tools and MCP** → Add server:
+
 ```json
 {
-  "react-docs": {
-    "command": "npx",
-    "args": ["-y", "react-docs-mcp"]
+  "mcpServers": {
+    "react-docs": {
+      "command": "npx",
+      "args": ["-y", "react-docs-mcp"]
+    }
   }
 }
 ```
@@ -103,11 +107,13 @@ Once configured, the server provides the following capabilities to AI agents:
 Search across React documentation.
 
 **Parameters**:
+
 - `query` (required): Search query string
 - `section` (optional): Filter by section (learn, reference, blog, community)
 - `limit` (optional): Maximum number of results (default: 10, max: 50)
 
 **Example**:
+
 ```
 Search for "useState hook" in the learn section
 ```
@@ -117,9 +123,11 @@ Search for "useState hook" in the learn section
 Get a specific documentation page.
 
 **Parameters**:
+
 - `path` (required): Document path (e.g., "learn/hooks/useState")
 
 **Example**:
+
 ```
 Get the useState documentation
 ```
@@ -129,6 +137,7 @@ Get the useState documentation
 List all available documentation sections.
 
 **Example**:
+
 ```
 What sections are available?
 ```
@@ -138,6 +147,7 @@ What sections are available?
 Pull latest documentation from the Git repository.
 
 **Example**:
+
 ```
 Update the React documentation
 ```
@@ -151,6 +161,7 @@ react-docs://{section}/{path}
 ```
 
 **Examples**:
+
 - `react-docs://learn` - List all learn section docs
 - `react-docs://learn/hooks/useState` - Get useState documentation
 - `react-docs://reference/react/Component` - Get Component API reference
