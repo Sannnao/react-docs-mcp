@@ -6,6 +6,10 @@
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
 
+<p align="center">
+  <img src="./demo.gif" width="100%" alt="React Docs MCP Demo">
+</p>
+
 ## 🚀 Installation (One Command)
 
 ### Claude Code
@@ -176,8 +180,6 @@ reactDocsMcp/
 │   ├── searchEngine.ts       # Search implementation
 │   ├── types.ts              # TypeScript types
 │   └── config.ts             # Configuration
-├── data/
-│   └── react-dev-repo/       # Cloned React docs (auto-created)
 ├── dist/                     # Compiled output
 └── TECHNICAL_SPEC.md         # Technical documentation
 ```
