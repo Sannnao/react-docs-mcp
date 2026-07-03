@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./poster.png" width="100%" alt="React Docs MCP">
+</p>
+
 # React Native Docs MCP Server
 
 AI-powered semantic search over React Native documentation for Claude, Cursor, and other MCP clients.
