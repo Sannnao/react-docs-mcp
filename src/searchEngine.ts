@@ -300,8 +300,8 @@ export class SearchEngine {
       await this.indexDocuments();
     }
 
-    // Normalize path (remove .md if present)
-    const normalizedPath = path.replace(/\.md$/, '');
+    // Normalize path (remove .md/.mdx if present)
+    const normalizedPath = path.replace(/\.mdx?$/, '');
 
     return this.documentIndex.get(normalizedPath) || null;
   }

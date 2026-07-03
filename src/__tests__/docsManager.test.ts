@@ -213,7 +213,7 @@ describe('DocsManager', () => {
       const result = await manager.getAllDocs();
 
       expect(result).toHaveLength(3);
-      expect(mockFg).toHaveBeenCalledWith('**/*.md', expect.objectContaining({
+      expect(mockFg).toHaveBeenCalledWith(['**/*.md', '**/*.mdx'], expect.objectContaining({
         absolute: false,
       }));
     });

@@ -79,7 +79,7 @@ function normalizePath(filePath: string): string {
   return filePath
     .replace(/\\/g, '/') // Convert backslashes to forward slashes
     .replace(/^\/+/, '') // Remove leading slashes
-    .replace(/\.md$/, ''); // Remove .md extension for cleaner paths
+    .replace(/\.mdx?$/, ''); // Remove .md/.mdx extension for cleaner paths
 }
 
 /**

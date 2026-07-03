@@ -150,9 +150,10 @@ export class DocsManager {
       return [];
     }
 
-    const files = await fg('**/*.md', {
+    const files = await fg(['**/*.md', '**/*.mdx'], {
       cwd: sectionPath,
       absolute: false,
+      ignore: ['**/_*.md', '**/_*.mdx'],
     });
 
     // Convert to paths relative to content root
@@ -173,9 +174,10 @@ export class DocsManager {
       return this.fileCache.get(cacheKey)!;
     }
 
-    const files = await fg('**/*.md', {
+    const files = await fg(['**/*.md', '**/*.mdx'], {
       cwd: this.contentPath,
       absolute: false,
+      ignore: ['**/_*.md', '**/_*.mdx'],
     });
 
     this.fileCache.set(cacheKey, files);

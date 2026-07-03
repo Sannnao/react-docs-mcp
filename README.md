@@ -6,6 +6,8 @@
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
 
+Looking for React Native docs instead? See [react-native-docs-mcp](./packages/react-native-docs-mcp).
+
 <p align="center">
   <img src="./demo.gif" width="100%" alt="React Docs MCP Demo">
 </p>
