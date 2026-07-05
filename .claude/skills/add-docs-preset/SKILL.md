@@ -59,7 +59,7 @@ Every package in the family links every other one. Adding a package means touchi
 - **Every `packages/*/README.md`**: each has an "Also available — same engine, other docs:" line near the top listing all *sibling* packages (npm links). Add the new package to each of them.
 - **New package's README**: its sibling line lists all the *other* packages.
 
-Checklist: after this step, `grep -L "<new-package-name>" README.md packages/*/README.md` must return only the new package's own README (a README never links itself).
+Checklist: after this step, `grep -L "<new-package-name>" README.md packages/*/README.md` must print **nothing** — every README mentions the new package (siblings via cross-links, the new one via its own install commands). Any path it prints is a README you forgot.
 
 ## 4. Tests + CI
 
