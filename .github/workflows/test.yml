@@ -25,11 +25,14 @@ jobs:
       - run: npm run build
       - run: npm test
 
-  build-react-native-docs-mcp:
+  build-packages:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [react-native-docs-mcp, react-hook-form-docs-mcp]
     defaults:
       run:
-        working-directory: packages/react-native-docs-mcp
+        working-directory: packages/${{ matrix.package }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,7 +41,7 @@ jobs:
         with:
           node-version: 20.x
           cache: npm
-          cache-dependency-path: packages/react-native-docs-mcp/package-lock.json
+          cache-dependency-path: packages/${{ matrix.package }}/package-lock.json
 
       - run: npm ci
       - run: npm run build

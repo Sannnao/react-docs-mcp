@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { reactDocsPreset } from '../presets/reactDocs.js';
 import { resolveReactNativeDocsPreset, LATEST_VERSION } from '../presets/reactNativeDocs.js';
+import { reactHookFormDocsPreset } from '../presets/reactHookFormDocs.js';
 
 const reactNativeDocsPreset = resolveReactNativeDocsPreset();
 
@@ -8,6 +9,7 @@ describe('presets', () => {
   for (const [name, preset] of [
     ['reactDocsPreset', reactDocsPreset],
     ['reactNativeDocsPreset', reactNativeDocsPreset],
+    ['reactHookFormDocsPreset', reactHookFormDocsPreset],
   ] as const) {
     describe(name, () => {
       it('has required fields populated', () => {
@@ -28,12 +30,17 @@ describe('presets', () => {
     });
   }
 
-  it('presets do not share identity-sensitive values', () => {
-    expect(reactDocsPreset.cacheDirName).not.toBe(reactNativeDocsPreset.cacheDirName);
-    expect(reactDocsPreset.repoFolderName).not.toBe(reactNativeDocsPreset.repoFolderName);
-    expect(reactDocsPreset.resourceUriScheme).not.toBe(reactNativeDocsPreset.resourceUriScheme);
-    expect(reactDocsPreset.searchToolName).not.toBe(reactNativeDocsPreset.searchToolName);
-    expect(reactDocsPreset.server.name).not.toBe(reactNativeDocsPreset.server.name);
+  it('presets do not share identity-sensitive values (pairwise)', () => {
+    const presets = [reactDocsPreset, reactNativeDocsPreset, reactHookFormDocsPreset];
+    const fields = ['cacheDirName', 'repoFolderName', 'resourceUriScheme', 'searchToolName'] as const;
+
+    for (const field of fields) {
+      const values = presets.map(p => p[field]);
+      expect(new Set(values).size).toBe(presets.length);
+    }
+
+    const serverNames = presets.map(p => p.server.name);
+    expect(new Set(serverNames).size).toBe(presets.length);
   });
 
   describe('resolveReactNativeDocsPreset versions', () => {

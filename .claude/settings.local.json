@@ -24,7 +24,11 @@
       "Bash(node dist/index.js --version)",
       "Bash(echo \"exit: $?\")",
       "Bash(node dist/index.js -v)",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ],
     "deny": [],
     "ask": []
