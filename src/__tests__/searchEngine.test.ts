@@ -1,10 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SearchEngine } from '../searchEngine.js';
+import { configure, type DocsMcpPreset } from '../config.js';
+import { reactDocsPreset } from '../presets/reactDocs.js';
 import type { ParsedDoc } from '../types.js';
 
 // Mock dependencies
 vi.mock('../docsManager.js');
-vi.mock('../markdownParser.js');
+// Partial mock: parseMarkdown is stubbed per-test, but normalizePath stays real
+// because searchEngine.getDocByPath depends on its actual behavior
+vi.mock('../markdownParser.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../markdownParser.js')>();
+  return { ...actual, parseMarkdown: vi.fn() };
+});
 vi.mock('../embeddingService.js');
 
 describe('SearchEngine', () => {
@@ -88,6 +95,30 @@ describe('SearchEngine', () => {
 
       // Should still index doc2
       expect(mockParseMarkdown).toHaveBeenCalledTimes(1);
+    });
+
+    it('should regenerate embeddings after re-indexing so semantic search keeps working (update_docs flow)', async () => {
+      mockDocsManager.getAllDocs.mockResolvedValue(['doc1.md']);
+      mockDocsManager.readDoc.mockResolvedValue('content');
+      mockParseMarkdown.mockImplementation(async () =>
+        createMockDoc('learn/doc1', 'Doc1', 'searchable text')
+      );
+
+      // First semantic search generates embeddings
+      const firstResults = await searchEngine.search('searchable');
+      expect(firstResults.length).toBeGreaterThan(0);
+      const embeddingCallsAfterFirstSearch =
+        mockEmbeddingService.generateEmbedding.mock.calls.length;
+
+      // update_docs flow: repo changed, documents re-indexed (fresh ParsedDocs, no embeddings)
+      await searchEngine.indexDocuments();
+
+      // Semantic search must still return results, which requires regenerating embeddings
+      const secondResults = await searchEngine.search('searchable');
+      expect(secondResults.length).toBeGreaterThan(0);
+      expect(mockEmbeddingService.generateEmbedding.mock.calls.length).toBeGreaterThan(
+        embeddingCallsAfterFirstSearch
+      );
     });
   });
 
@@ -355,13 +386,103 @@ describe('SearchEngine', () => {
 
       expect(mockDocsManager.getAllDocs).toHaveBeenCalled();
     });
+
+    it('should normalize leading slashes', async () => {
+      const doc = await searchEngine.getDocByPath('/learn/hooks');
+
+      expect(doc?.metadata.title).toBe('Hooks');
+    });
+
+    it('should normalize Windows-style backslashes', async () => {
+      const doc = await searchEngine.getDocByPath('learn\\hooks');
+
+      expect(doc?.metadata.title).toBe('Hooks');
+    });
+
+    it('should normalize .mdx extension', async () => {
+      const doc = await searchEngine.getDocByPath('learn/hooks.mdx');
+
+      expect(doc?.metadata.title).toBe('Hooks');
+    });
   });
 
-  describe('getSections', () => {
-    it('should return all available sections', () => {
-      const sections = searchEngine.getSections();
+  describe('frontmatter id slugs (useFrontmatterId presets)', () => {
+    const idPreset: DocsMcpPreset = {
+      ...reactDocsPreset,
+      docUrl: { base: 'https://example.dev/docs', useFrontmatterId: true },
+    };
 
-      expect(sections).toEqual(['learn', 'reference', 'blog', 'community']);
+    afterEach(() => {
+      configure(reactDocsPreset);
+    });
+
+    it('indexes docs under their frontmatter-id slug so emitted URLs round-trip', async () => {
+      configure(idPreset);
+      // Real react-native-website case: introduction.md has id getting-started,
+      // getting-started.md has id environment-setup
+      const intro = createMockDoc('introduction', 'Introduction', 'intro text');
+      intro.metadata.id = 'getting-started';
+      const envSetup = createMockDoc('getting-started', 'Environment Setup', 'setup text');
+      envSetup.metadata.id = 'environment-setup';
+
+      mockDocsManager.getAllDocs.mockResolvedValue(['introduction.md', 'getting-started.md']);
+      mockDocsManager.readDoc.mockResolvedValue('content');
+      mockParseMarkdown.mockResolvedValueOnce(intro).mockResolvedValueOnce(envSetup);
+
+      await searchEngine.indexDocuments();
+
+      // The URL slug for introduction.md is getting-started — get_doc must return THAT doc
+      const byUrlSlug = await searchEngine.getDocByPath('getting-started');
+      expect(byUrlSlug?.metadata.title).toBe('Introduction');
+
+      const byIdSlug = await searchEngine.getDocByPath('environment-setup');
+      expect(byIdSlug?.metadata.title).toBe('Environment Setup');
+    });
+
+    it('replaces only the last path segment with the id', async () => {
+      configure(idPreset);
+      const doc = createMockDoc('the-new-architecture/what-is-codegen', 'Codegen', 'text');
+      doc.metadata.id = 'codegen-intro';
+
+      mockDocsManager.getAllDocs.mockResolvedValue(['the-new-architecture/what-is-codegen.md']);
+      mockDocsManager.readDoc.mockResolvedValue('content');
+      mockParseMarkdown.mockResolvedValue(doc);
+
+      await searchEngine.indexDocuments();
+
+      const found = await searchEngine.getDocByPath('the-new-architecture/codegen-intro');
+      expect(found?.metadata.title).toBe('Codegen');
+    });
+
+    it('ignores non-string frontmatter ids instead of crashing', async () => {
+      configure(idPreset);
+      const doc = createMockDoc('some-page', 'Some Page', 'text');
+      doc.metadata.id = 123 as unknown as string;
+
+      mockDocsManager.getAllDocs.mockResolvedValue(['some-page.md']);
+      mockDocsManager.readDoc.mockResolvedValue('content');
+      mockParseMarkdown.mockResolvedValue(doc);
+
+      await searchEngine.indexDocuments();
+
+      const found = await searchEngine.getDocByPath('some-page');
+      expect(found?.metadata.title).toBe('Some Page');
+    });
+
+    it('leaves paths untouched when useFrontmatterId is false', async () => {
+      // default react.dev preset: ids must NOT rewrite paths
+      const doc = createMockDoc('index', 'Home', 'text');
+      doc.metadata.id = 'home';
+
+      mockDocsManager.getAllDocs.mockResolvedValue(['index.md']);
+      mockDocsManager.readDoc.mockResolvedValue('content');
+      mockParseMarkdown.mockResolvedValue(doc);
+
+      await searchEngine.indexDocuments();
+
+      const found = await searchEngine.getDocByPath('index');
+      expect(found?.metadata.title).toBe('Home');
+      expect(await searchEngine.getDocByPath('home')).toBeNull();
     });
   });
 

@@ -8,6 +8,8 @@ vi.mock('fs', () => ({
     access: vi.fn(),
     mkdir: vi.fn(),
     readFile: vi.fn(),
+    rename: vi.fn(),
+    rm: vi.fn(),
   },
 }));
 vi.mock('fast-glob');
@@ -76,6 +78,50 @@ describe('DocsManager', () => {
       mockGit.clone.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(manager.initialize()).rejects.toThrow('Failed to clone repository');
+    });
+
+    it('should clone into a temp dir and rename into place (concurrent-safe)', async () => {
+      (mockFs.access as any).mockRejectedValueOnce(new Error('ENOENT'));
+
+      await manager.initialize();
+
+      // Clone must NOT target the final path directly — a concurrent process
+      // cloning the same path would collide; clone to temp, then atomic rename
+      expect(mockGit.clone).toHaveBeenCalledWith(
+        'https://github.com/reactjs/react.dev.git',
+        expect.stringMatching(/react-dev-repo\.cloning-/),
+        { '--depth': 1 }
+      );
+      expect(mockFs.rename).toHaveBeenCalledWith(
+        expect.stringMatching(/react-dev-repo\.cloning-/),
+        expect.stringMatching(/react-dev-repo$/)
+      );
+    });
+
+    it('should tolerate another process finishing the clone first', async () => {
+      // First access (.git check) rejects: repo missing, we start cloning.
+      // rename fails because the other process's clone landed first,
+      // then the re-check of .git resolves: repo now exists.
+      (mockFs.access as any).mockRejectedValueOnce(new Error('ENOENT'));
+      (mockFs.rename as any).mockRejectedValueOnce(new Error('ENOTEMPTY: directory not empty'));
+
+      await expect(manager.initialize()).resolves.toBeUndefined();
+
+      // Our redundant temp clone must be cleaned up
+      expect(mockFs.rm).toHaveBeenCalledWith(
+        expect.stringMatching(/react-dev-repo\.cloning-/),
+        expect.objectContaining({ recursive: true })
+      );
+    });
+
+    it('should throw a clear error when the configured content path does not exist', async () => {
+      // Repo exists (.git access resolves), but the contentPath access rejects —
+      // e.g. an invalid --docs-version pointing at a nonexistent versioned_docs folder
+      (mockFs.access as any).mockImplementation((p: string) =>
+        p.endsWith('.git') ? Promise.resolve() : Promise.reject(new Error('ENOENT'))
+      );
+
+      await expect(manager.initialize()).rejects.toThrow('Docs content path not found');
     });
   });
 
@@ -216,6 +262,29 @@ describe('DocsManager', () => {
       expect(mockFg).toHaveBeenCalledWith(['**/*.md', '**/*.mdx'], expect.objectContaining({
         absolute: false,
       }));
+    });
+  });
+
+  describe('getExistingSections', () => {
+    it('should keep only sections whose directory exists', async () => {
+      // learn + reference exist, blog + community don't
+      (mockFs.access as any).mockImplementation((p: string) =>
+        p.endsWith('/learn') || p.endsWith('/reference')
+          ? Promise.resolve()
+          : Promise.reject(new Error('ENOENT'))
+      );
+
+      const sections = await manager.getExistingSections(['learn', 'reference', 'blog', 'community']);
+
+      expect(sections).toEqual(['learn', 'reference']);
+    });
+
+    it('should return empty array when no section directories exist', async () => {
+      (mockFs.access as any).mockRejectedValue(new Error('ENOENT'));
+
+      const sections = await manager.getExistingSections(['releases']);
+
+      expect(sections).toEqual([]);
     });
   });
 

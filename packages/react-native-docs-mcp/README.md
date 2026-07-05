@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./poster.png" width="100%" alt="React Docs MCP">
+  <img src="../../poster.png" width="100%" alt="React Native Docs MCP">
 </p>
 
 # React Native Docs MCP Server
@@ -52,12 +52,15 @@ Edit: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) 
 
 ## Features
 
+- **🔑 No API Key**: Unlike hosted docs services (Context7, GitMCP), everything runs on your machine — no account, no key, no rate limits
+- **🔌 Works Offline**: Clones the official react-native-website docs repo once, then searches locally — no network calls at query time
 - **🔍 Semantic Search**: AI-powered search using embeddings for conceptual matches
 - **⚡ Fast Results**: In-memory vector search with hybrid keyword+semantic ranking
 - **📦 Zero Config**: Works with `npx` - no installation needed
 - **🤖 Local AI**: Runs embeddings locally (no API costs)
 - **📝 Concise Responses**: Returns summaries instead of full documentation
 - **🔄 Auto-sync**: Pulls latest docs from the react-native-website repo automatically
+- **📌 Version Pinning**: `--docs-version=0.77` scopes docs to the React Native release your app actually uses
 
 ## Usage
 
@@ -88,12 +91,20 @@ Get a specific documentation page.
 **Parameters**:
 
 - `path` (required): Document path (e.g., "getting-started", "the-new-architecture/using-codegen")
+- `full` (optional): Return the full raw page instead of the ~1500 char summary (default: false)
 
 **Example**:
 
 ```
 Get the React Native flexbox documentation
 ```
+
+**Why `full`?** The default summary is enough for most reference pages, but long guides — like "The New Architecture" migration docs, or a full native-modules walkthrough — can run well past 1500 chars, and the summary may stop before the part you actually need. Ask for the complete page when that happens:
+
+```
+Get the full page for the-new-architecture/using-codegen, I need every step
+```
+which calls `get_doc` with `{ "path": "the-new-architecture/using-codegen", "full": true }`.
 
 #### `list_sections`
 
@@ -102,6 +113,26 @@ List all available documentation sections.
 #### `update_docs`
 
 Pull latest documentation from the Git repository.
+
+### Docs version
+
+By default this server indexes the always-current `docs/` folder from the react-native-website repo — the same docs shown on reactnative.dev today. To pin it to a specific past release's frozen docs snapshot instead, pass `--docs-version`:
+
+```bash
+npx react-native-docs-mcp --docs-version=0.77
+```
+
+or set the `REACT_NATIVE_DOCS_VERSION` env var (the CLI flag wins if both are set). With Claude Code:
+
+```bash
+claude mcp add --transport stdio react-native-docs -- npx react-native-docs-mcp --docs-version=0.77
+```
+
+(Bare `--version` prints the package version, as you'd expect from any CLI.)
+
+**Why pin a version?** If your app is running React Native 0.77 but the agent searches always-current docs, it can suggest an API that only exists in 0.86, or miss that something was renamed/removed since your version. Pinning `--docs-version` to match your `react-native` dependency's version keeps suggestions consistent with the APIs actually available in your app — useful when working on an app that's a few releases behind latest, or when debugging something version-specific (e.g. "did this New Architecture behavior change between 0.78 and 0.82?" — run two instances, one per version, and compare).
+
+Only `latest` (the default) is fully verified against the current docs structure; older version snapshots are indexed best-effort with the same settings.
 
 ### Resources
 

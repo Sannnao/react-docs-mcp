@@ -6,7 +6,7 @@
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
 
-Looking for React Native docs instead? See [react-native-docs-mcp](./packages/react-native-docs-mcp).
+> **📱 Also in this repo: [react-native-docs-mcp](https://www.npmjs.com/package/react-native-docs-mcp)** — the same engine, but for the official React Native docs (reactnative.dev). Source lives in [`packages/react-native-docs-mcp`](./packages/react-native-docs-mcp). Both packages share one search engine, so improvements land in both.
 
 <p align="center">
   <img src="./demo.gif" width="100%" alt="React Docs MCP Demo">
@@ -56,6 +56,8 @@ Edit: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) 
 
 ## Features
 
+- **🔑 No API Key**: Unlike hosted docs services (Context7, GitMCP), everything runs on your machine — no account, no key, no rate limits
+- **🔌 Works Offline**: Clones the official react.dev docs repo once, then searches locally — no network calls at query time
 - **🔍 Semantic Search**: AI-powered search using embeddings for conceptual matches
 - **⚡ Fast Results**: In-memory vector search with hybrid keyword+semantic ranking
 - **📦 Zero Config**: Works with `npx` - no installation needed
@@ -127,12 +129,20 @@ Get a specific documentation page.
 **Parameters**:
 
 - `path` (required): Document path (e.g., "learn/hooks/useState")
+- `full` (optional): Return the full raw page instead of the ~1500 char summary (default: false)
 
 **Example**:
 
 ```
 Get the useState documentation
 ```
+
+**Why `full`?** The default ~1500 char summary is enough for most API references, but it can cut off partway through longer pages — migration guides, upgrade walkthroughs, or anything with many sequential steps. If the summary seems to end mid-thought or you need every step of a guide, ask for the full page:
+
+```
+Get the full content of the React 19 upgrade guide, not just the summary
+```
+which calls `get_doc` with `{ "path": "learn/upgrading-to-react-19", "full": true }` and returns the complete raw page instead of the truncated summary.
 
 #### `list_sections`
 
@@ -147,6 +157,14 @@ What sections are available?
 #### `update_docs`
 
 Pull latest documentation from the Git repository.
+
+### CLI
+
+```bash
+npx react-docs-mcp --version   # print the installed package version and exit
+```
+
+(Version pinning via `--docs-version` is a [react-native-docs-mcp](./packages/react-native-docs-mcp) feature — react.dev has no versioned docs.)
 
 **Example**:
 

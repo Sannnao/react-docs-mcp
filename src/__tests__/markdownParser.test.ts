@@ -3,6 +3,8 @@ import {
   parseMarkdown,
   markdownToPlainText,
   extractSection,
+  normalizePath,
+  titleCase,
 } from '../markdownParser.js';
 
 describe('markdownParser', () => {
@@ -119,6 +121,22 @@ Content`;
     it('should handle empty input', async () => {
       const result = await markdownToPlainText('');
       expect(result).toBe('');
+    });
+  });
+
+  describe('normalizePath', () => {
+    it('should strip leading slashes, backslashes, and md/mdx extensions', () => {
+      expect(normalizePath('/learn/hooks.md')).toBe('learn/hooks');
+      expect(normalizePath('learn\\hooks.mdx')).toBe('learn/hooks');
+      expect(normalizePath('learn/hooks')).toBe('learn/hooks');
+    });
+  });
+
+  describe('titleCase', () => {
+    it('should convert kebab-case and snake_case slugs to Title Case', () => {
+      expect(titleCase('the-new-architecture')).toBe('The New Architecture');
+      expect(titleCase('getting_started')).toBe('Getting Started');
+      expect(titleCase('legacy')).toBe('Legacy');
     });
   });
 

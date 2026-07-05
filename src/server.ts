@@ -16,37 +16,22 @@ import { z } from 'zod';
 import { DocsManager } from './docsManager.js';
 import { SearchEngine } from './searchEngine.js';
 import { summarizeContent, extractStructure } from './summarizer.js';
+import { titleCase } from './markdownParser.js';
 import CONFIG from './config.js';
 import type { ParsedDoc } from './types.js';
 
-function titleCase(section: string): string {
-  return section
-    .split(/[-_]/)
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+function escapeRegExp(literal: string): string {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
- * Build the public doc URL for a parsed document. When the active preset's
- * docUrl.useFrontmatterId is true, a frontmatter `id` field takes priority
- * over the file-path-derived slug (needed for docs sites like Docusaurus
- * where `id` can diverge from the file path).
+ * Build the public doc URL for a parsed document. doc.path is already the
+ * canonical slug: for useFrontmatterId presets, SearchEngine resolves the
+ * frontmatter id into the path at index time, so URLs, paths, and get_doc
+ * lookups all agree.
  */
 function buildDocUrl(doc: ParsedDoc): string {
-  let slug = doc.path;
-  const id = doc.metadata.id as string | undefined;
-
-  if (CONFIG.docUrl.useFrontmatterId && id) {
-    if (id.includes('/')) {
-      slug = id;
-    } else {
-      const parts = doc.path.split('/');
-      parts[parts.length - 1] = id;
-      slug = parts.join('/');
-    }
-  }
-
-  return `${CONFIG.docUrl.base}/${slug}`;
+  return `${CONFIG.docUrl.base}/${doc.path}`;
 }
 
 export async function createServer(): Promise<void> {
@@ -71,20 +56,31 @@ export async function createServer(): Promise<void> {
   // Tool input schemas
   const searchDocsSchema = z.object({
     query: z.string().describe('Search query string'),
-    section: z.string().optional().describe(`Filter by section (${CONFIG.sections.join(', ')})`),
+    section: z
+      .string()
+      .optional()
+      .refine(section => section === undefined || CONFIG.sections.includes(section), {
+        message: `Unknown section. Valid sections: ${CONFIG.sections.join(', ')}`,
+      })
+      .describe(`Filter by section (${CONFIG.sections.join(', ')})`),
     limit: z.number().min(1).max(CONFIG.search.maxLimit).optional().describe('Maximum number of results'),
   });
 
   const getDocSchema = z.object({
-    path: z.string().describe('Document path (e.g., "learn/hooks/useState")'),
+    path: z.string().describe(`Document path (e.g., "${CONFIG.pathExample}")`),
+    full: z.boolean().optional().describe('Return the full raw page content instead of a ~1500 char summary'),
   });
 
-  const resourceUriRegex = new RegExp(`^${CONFIG.resourceUriScheme}:\\/\\/(.+)$`);
+  const resourceUriRegex = new RegExp(`^${escapeRegExp(CONFIG.resourceUriScheme)}:\\/\\/(.+)$`);
 
   // Register list resources handler
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    // Only advertise sections that exist in the checked-out docs — e.g. older
+    // versioned snapshots may predate a section like releases/
+    const existingSections = await docsManager.getExistingSections(CONFIG.sections);
+
     return {
-      resources: CONFIG.sections.map(section => {
+      resources: existingSections.map(section => {
         const override = CONFIG.sectionResourceOverrides?.[section];
 
         return {
@@ -184,13 +180,17 @@ export async function createServer(): Promise<void> {
         },
         {
           name: 'get_doc',
-          description: `Get a concise summary of a documentation page (~1500 chars). Use ${CONFIG.searchToolName} first - only call this if you need more detail than the search snippet provides.`,
+          description: `Get a concise summary of a documentation page (~1500 chars), or the full raw page with full:true. Use ${CONFIG.searchToolName} first - only call this if you need more detail than the search snippet provides.`,
           inputSchema: {
             type: 'object',
             properties: {
               path: {
                 type: 'string',
-                description: 'Document path (e.g., "learn/hooks/useState")',
+                description: `Document path (e.g., "${CONFIG.pathExample}")`,
+              },
+              full: {
+                type: 'boolean',
+                description: 'Return the full raw page content instead of a ~1500 char summary',
               },
             },
             required: ['path'],
@@ -239,7 +239,7 @@ export async function createServer(): Promise<void> {
         }
 
         case 'list_sections': {
-          const sections = searchEngine.getSections();
+          const sections = await docsManager.getExistingSections(CONFIG.sections);
 
           return {
             content: [
@@ -252,16 +252,20 @@ export async function createServer(): Promise<void> {
         }
 
         case 'get_doc': {
-          const { path } = getDocSchema.parse(args);
+          const { path, full } = getDocSchema.parse(args);
           const doc = await searchEngine.getDocByPath(path);
 
           if (!doc) {
             throw new Error(`Document not found: ${path}`);
           }
 
-          // Return concise summary instead of full content
-          const summary = summarizeContent(doc.content, 1500);
-          const structure = extractStructure(doc.content);
+          const body = full
+            ? { content: doc.content, note: 'Full page content.' }
+            : {
+                summary: summarizeContent(doc.content, 1500),
+                structure: extractStructure(doc.content),
+                note: 'This is a summary. Pass full:true for the complete page, or visit the URL.',
+              };
 
           return {
             content: [
@@ -273,10 +277,8 @@ export async function createServer(): Promise<void> {
                     section: doc.section,
                     title: doc.metadata.title,
                     description: doc.metadata.description,
-                    summary,
-                    structure,
+                    ...body,
                     url: buildDocUrl(doc),
-                    note: 'This is a summary. Visit the URL for full documentation.',
                   },
                   null,
                   2

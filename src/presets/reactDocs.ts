@@ -4,6 +4,7 @@
  */
 
 import type { DocsMcpPreset } from '../config.js';
+import { DEFAULT_SEARCH } from './searchDefaults.js';
 
 export const reactDocsPreset: DocsMcpPreset = {
   cacheDirName: 'react-docs-mcp',
@@ -12,24 +13,17 @@ export const reactDocsPreset: DocsMcpPreset = {
     url: 'https://github.com/reactjs/react.dev.git',
     contentPath: 'src/content',
   },
-  search: {
-    defaultLimit: 10,
-    maxLimit: 50,
-    minScore: 0.1,
-    semanticSearchEnabled: true,
-    semanticMinSimilarity: 0.3,
-    hybridKeywordWeight: 0.3,
-    hybridSemanticWeight: 0.7,
-  },
+  search: { ...DEFAULT_SEARCH },
   server: {
     name: 'react-docs-mcp',
-    version: '1.1.0',
+    version: '1.2.0',
   },
   sections: ['learn', 'reference', 'blog', 'community'],
   resourceUriScheme: 'react-docs',
   docsLabel: 'React',
   searchToolName: 'search_react_docs',
   searchToolDescription: 'Search across React documentation. Returns relevant documentation pages with snippets.',
+  pathExample: 'reference/react/useState',
   docUrl: { base: 'https://react.dev', useFrontmatterId: false },
   sectionResourceOverrides: {
     learn: {

@@ -4,10 +4,29 @@
  */
 
 import { DocsManager } from './docsManager.js';
-import { parseMarkdown } from './markdownParser.js';
+import { parseMarkdown, normalizePath } from './markdownParser.js';
 import { EmbeddingService } from './embeddingService.js';
 import CONFIG from './config.js';
 import type { ParsedDoc, SearchOptions, SearchResult } from './types.js';
+
+/**
+ * Resolve the canonical slug for a doc: Docusaurus-style sites route by
+ * frontmatter `id` when present, overriding the file-path-derived slug.
+ * Returns the path unchanged for missing/non-string ids.
+ */
+export function resolveDocSlug(path: string, id: unknown): string {
+  if (typeof id !== 'string' || id.length === 0) {
+    return path;
+  }
+
+  if (id.includes('/')) {
+    return id;
+  }
+
+  const parts = path.split('/');
+  parts[parts.length - 1] = id;
+  return parts.join('/');
+}
 
 export class SearchEngine {
   private docsManager: DocsManager;
@@ -39,6 +58,11 @@ export class SearchEngine {
       try {
         const content = await this.docsManager.readDoc(docPath);
         const parsedDoc = await parseMarkdown(content, docPath);
+        // For Docusaurus-style docs, the frontmatter id IS the live URL slug —
+        // key the index by it so paths, URLs, and get_doc lookups all agree
+        if (CONFIG.docUrl.useFrontmatterId) {
+          parsedDoc.path = resolveDocSlug(parsedDoc.path, parsedDoc.metadata.id);
+        }
         this.documentIndex.set(parsedDoc.path, parsedDoc);
       } catch (error) {
         console.warn(`Failed to index document ${docPath}:`, error);
@@ -46,6 +70,8 @@ export class SearchEngine {
     }
 
     this.indexed = true;
+    // Rebuilt ParsedDocs have no .embedding — force regeneration on next semantic search
+    this.embeddingsGenerated = false;
     console.log(`Indexed ${this.documentIndex.size} documents`);
   }
 
@@ -300,17 +326,7 @@ export class SearchEngine {
       await this.indexDocuments();
     }
 
-    // Normalize path (remove .md/.mdx if present)
-    const normalizedPath = path.replace(/\.mdx?$/, '');
-
-    return this.documentIndex.get(normalizedPath) || null;
-  }
-
-  /**
-   * List all available sections
-   */
-  getSections(): string[] {
-    return [...CONFIG.sections];
+    return this.documentIndex.get(normalizePath(path)) || null;
   }
 
   /**

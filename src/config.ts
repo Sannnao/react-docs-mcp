@@ -5,6 +5,7 @@
 
 import { homedir } from 'os';
 import { join } from 'path';
+import { reactDocsPreset } from './presets/reactDocs.js';
 
 // Determine cache directory based on OS
 const getCacheDir = (cacheDirName: string): string => {
@@ -35,7 +36,8 @@ export interface SearchConfig {
 
 export interface DocUrlConfig {
   base: string;
-  // When true, prefer frontmatter `id` over the file path for building the doc URL slug
+  // When true, a doc's frontmatter `id` overrides the file-path-derived slug
+  // (Docusaurus routing); the slug is resolved into doc.path at index time
   useFrontmatterId: boolean;
 }
 
@@ -64,32 +66,22 @@ export interface DocsMcpPreset {
   docsLabel: string;
   searchToolName: string;
   searchToolDescription: string;
+  pathExample: string; // a real doc path used in tool schema examples
   docUrl: DocUrlConfig;
   sectionResourceOverrides?: Partial<Record<string, SectionResourceOverride>>;
 }
 
 /**
- * Resolved runtime config (preset values + derived repo.localPath)
+ * Resolved runtime config: preset values with repo.localPath derived from the
+ * cache dir. Derived from DocsMcpPreset so new preset fields flow through.
  */
-export interface DocsMcpConfig {
+export type DocsMcpConfig = Omit<DocsMcpPreset, 'cacheDirName' | 'repoFolderName' | 'repo'> & {
   repo: {
     url: string;
-    localPath: string;
     contentPath: string;
+    localPath: string;
   };
-  search: SearchConfig;
-  server: {
-    name: string;
-    version: string;
-  };
-  sections: readonly string[];
-  resourceUriScheme: string;
-  docsLabel: string;
-  searchToolName: string;
-  searchToolDescription: string;
-  docUrl: DocUrlConfig;
-  sectionResourceOverrides?: Partial<Record<string, SectionResourceOverride>>;
-}
+};
 
 function resolve(preset: DocsMcpPreset): DocsMcpConfig {
   const { cacheDirName, repoFolderName, repo, ...rest } = preset;
@@ -104,36 +96,9 @@ function resolve(preset: DocsMcpPreset): DocsMcpConfig {
   };
 }
 
-const defaultPreset: DocsMcpPreset = {
-  cacheDirName: 'react-docs-mcp',
-  repoFolderName: 'react-dev-repo',
-  repo: {
-    url: 'https://github.com/reactjs/react.dev.git',
-    contentPath: 'src/content',
-  },
-  search: {
-    defaultLimit: 10,
-    maxLimit: 50,
-    minScore: 0.1,
-    semanticSearchEnabled: true,
-    semanticMinSimilarity: 0.3,
-    hybridKeywordWeight: 0.3,
-    hybridSemanticWeight: 0.7,
-  },
-  server: {
-    name: 'react-docs-mcp',
-    version: '1.0.0',
-  },
-  sections: ['learn', 'reference', 'blog', 'community'],
-  resourceUriScheme: 'react-docs',
-  docsLabel: 'React',
-  searchToolName: 'search_react_docs',
-  searchToolDescription: 'Search across React documentation. Returns relevant documentation pages with snippets.',
-  docUrl: { base: 'https://react.dev', useFrontmatterId: false },
-};
-
 // Module-level active config; swappable via configure() before the server starts.
-let activeConfig: DocsMcpConfig = resolve(defaultPreset);
+// Seeded from the react.dev preset (single source of truth — no duplicate defaults).
+let activeConfig: DocsMcpConfig = resolve(reactDocsPreset);
 
 export function configure(preset: DocsMcpPreset): void {
   activeConfig = resolve(preset);
@@ -141,4 +106,3 @@ export function configure(preset: DocsMcpPreset): void {
 
 // Live binding: consumers importing the default export see updates made by configure().
 export { activeConfig as default };
-export type Section = string;

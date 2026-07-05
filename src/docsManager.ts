@@ -30,11 +30,22 @@ export class DocsManager {
     const repoExists = await this.checkRepoExists();
 
     if (!repoExists) {
-      console.log('Cloning React documentation repository...');
+      console.log('Cloning documentation repository...');
       await this.cloneRepo();
       console.log('Repository cloned successfully');
     } else {
       console.log('Repository already exists');
+    }
+
+    // Fail loudly instead of serving an empty index when the configured
+    // content path is missing (e.g. an invalid --docs-version value)
+    try {
+      await fs.access(this.contentPath);
+    } catch {
+      throw new Error(
+        `Docs content path not found: ${this.contentPath}. ` +
+          'The cloned repository has no such folder — if you passed --docs-version, check that this docs version exists.'
+      );
     }
   }
 
@@ -51,17 +62,38 @@ export class DocsManager {
   }
 
   /**
-   * Clone the repository
+   * Clone the repository.
+   * Clones into a temp directory and renames into place so that two
+   * processes starting on a fresh machine (e.g. two MCP servers sharing one
+   * cache) don't corrupt each other; the loser discards its redundant copy.
    */
   private async cloneRepo(): Promise<void> {
+    const tempPath = `${this.repoPath}.cloning-${process.pid}`;
+
     try {
       // Ensure parent directory exists
       await fs.mkdir(path.dirname(this.repoPath), { recursive: true });
 
-      await this.git.clone(CONFIG.repo.url, this.repoPath, {
+      await this.git.clone(CONFIG.repo.url, tempPath, {
         '--depth': 1, // Shallow clone for faster download
       });
+
+      try {
+        await fs.rename(tempPath, this.repoPath);
+      } catch (renameError) {
+        if (await this.checkRepoExists()) {
+          // Another process finished the clone first — ours is redundant
+          await fs.rm(tempPath, { recursive: true, force: true });
+          return;
+        }
+        throw renameError;
+      }
     } catch (error) {
+      try {
+        await fs.rm(tempPath, { recursive: true, force: true });
+      } catch {
+        // best-effort cleanup of the temp clone
+      }
       throw new Error(
         `Failed to clone repository: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -182,6 +214,27 @@ export class DocsManager {
 
     this.fileCache.set(cacheKey, files);
     return files;
+  }
+
+  /**
+   * Filter a list of section names down to those whose directory actually
+   * exists under the content root. Lets the server avoid advertising
+   * sections that are empty in the checked-out docs (e.g. a versioned
+   * snapshot that predates a section).
+   */
+  async getExistingSections(sections: readonly string[]): Promise<string[]> {
+    const checks = await Promise.all(
+      sections.map(async section => {
+        try {
+          await fs.access(path.join(this.contentPath, section));
+          return section;
+        } catch {
+          return null;
+        }
+      })
+    );
+
+    return checks.filter((section): section is string => section !== null);
   }
 
   /**

@@ -75,11 +75,23 @@ export function extractSection(path: string): string {
 /**
  * Normalize path (forward slashes, no leading slash, no .md extension for display)
  */
-function normalizePath(filePath: string): string {
+export function normalizePath(filePath: string): string {
   return filePath
     .replace(/\\/g, '/') // Convert backslashes to forward slashes
     .replace(/^\/+/, '') // Remove leading slashes
     .replace(/\.mdx?$/, ''); // Remove .md/.mdx extension for cleaner paths
+}
+
+/**
+ * Convert a kebab-case or snake_case slug to Title Case
+ * E.g., "the-new-architecture" -> "The New Architecture"
+ */
+export function titleCase(slug: string): string {
+  return slug
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 }
 
 /**
@@ -91,10 +103,5 @@ function extractTitleFromPath(filePath: string): string {
   const parts = normalized.split('/');
   const filename = parts[parts.length - 1] || 'Untitled';
 
-  // Convert kebab-case or snake_case to Title Case
-  return filename
-    .replace(/[-_]/g, ' ')
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return titleCase(filename);
 }
