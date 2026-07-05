@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="../../poster.png" width="100%" alt="React Native Docs MCP">
+  <img src="https://raw.githubusercontent.com/Sannnao/react-docs-mcp/master/poster.png" width="100%" alt="React Native Docs MCP">
 </p>
 
 # React Native Docs MCP Server
@@ -151,7 +151,7 @@ react-native-docs://{section}/{path}
 
 ## Development
 
-This package shares its engine (`src/`) with the root [react-docs-mcp](../../) project in this repo — see that project's README for the underlying architecture. This package's own source only configures the shared engine with React Native-specific defaults (`src/index.ts`) and is bundled standalone with [tsup](https://tsup.egoist.dev/).
+This package shares its engine with [react-docs-mcp](https://github.com/Sannnao/react-docs-mcp) — development happens in that monorepo (this standalone repo is a read-only mirror of `packages/react-native-docs-mcp/`; please file issues there). This package's own source only configures the shared engine with React Native-specific defaults (`src/index.ts`) and is bundled standalone with [tsup](https://tsup.egoist.dev/).
 
 ```bash
 npm install

@@ -1,0 +1,31 @@
+name: Sync react-native-docs-mcp mirror
+
+# Keeps the standalone read-only mirror repo (Sannnao/react-native-docs-mcp)
+# in sync with packages/react-native-docs-mcp/ in this monorepo, so MCP
+# directories that require a dedicated repo URL can list it.
+#
+# Requires a MIRROR_TOKEN repo secret: a fine-grained PAT with
+# Contents: Read and write on the Sannnao/react-native-docs-mcp repo.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'packages/react-native-docs-mcp/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split package subtree
+        run: git subtree split --prefix=packages/react-native-docs-mcp -b mirror-branch
+
+      - name: Push to mirror repo
+        run: |
+          git push --force \
+            "https://x-access-token:${{ secrets.MIRROR_TOKEN }}@github.com/Sannnao/react-native-docs-mcp.git" \
+            mirror-branch:master
