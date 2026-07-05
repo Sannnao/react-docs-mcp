@@ -4,4 +4,4 @@ data/
 *.log
 .DS_Store
 .env
-.claude
+.claude/settings.local.json
