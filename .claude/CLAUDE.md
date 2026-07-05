@@ -91,7 +91,7 @@ A preset (`DocsMcpPreset`) fully describes a docs source; each package's entrypo
 
 ## Adding a new library preset/package
 
-Follow .claude/skills/add-docs-preset/SKILL.md — feasibility check (clonable markdown? frontmatter ids? versioned?), preset file, scaffold copied from packages/react-hook-form-docs-mcp, tests, JSON-RPC smoke with live-URL spot-checks, publish + mirror repo.
+Follow .claude/skills/add-docs-preset/SKILL.md — feasibility check (clonable markdown? frontmatter ids? versioned?), preset file, scaffold copied from packages/react-hook-form-docs-mcp, cross-link ALL package READMEs (root callout + every sibling's "Also available" line — verify with `grep -L "<new-pkg>" README.md packages/*/README.md`), tests, JSON-RPC smoke with live-URL spot-checks, publish + mirror repo.
 
 ## Gotchas
 

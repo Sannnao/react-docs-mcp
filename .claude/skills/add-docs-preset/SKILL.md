@@ -51,6 +51,16 @@ Copy `packages/react-hook-form-docs-mcp/` wholesale, then swap:
 
 `npm install` inside the package dir (it has its own lockfile).
 
+## 3b. Cross-link ALL package READMEs — easy to forget, always required
+
+Every package in the family links every other one. Adding a package means touching **every existing README**, not just the new one:
+
+- **Root `README.md`**: add the new package to the "Also available — same engine, other docs" callout block under the title (npm link + standalone repo link + one-phrase description).
+- **Every `packages/*/README.md`**: each has an "Also available — same engine, other docs:" line near the top listing all *sibling* packages (npm links). Add the new package to each of them.
+- **New package's README**: its sibling line lists all the *other* packages.
+
+Checklist: after this step, `grep -L "<new-package-name>" README.md packages/*/README.md` must return only the new package's own README (a README never links itself).
+
 ## 4. Tests + CI
 
 - Add the preset to the loop in `src/__tests__/presets.test.ts` AND to the identity-collision checks (cacheDirName/scheme/tool/server.name must differ across ALL presets pairwise).
