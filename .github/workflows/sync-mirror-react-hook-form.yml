@@ -1,0 +1,30 @@
+name: Sync react-hook-form-docs-mcp mirror
+
+# Keeps the standalone read-only mirror repo (Sannnao/react-hook-form-docs-mcp)
+# in sync with packages/react-hook-form-docs-mcp/ in this monorepo.
+#
+# Uses the same MIRROR_TOKEN secret as the react-native mirror — the
+# fine-grained PAT must list BOTH mirror repos under Repository access.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'packages/react-hook-form-docs-mcp/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Split package subtree
+        run: git subtree split --prefix=packages/react-hook-form-docs-mcp -b mirror-branch
+
+      - name: Push to mirror repo
+        run: |
+          git push --force \
+            "https://x-access-token:${{ secrets.MIRROR_TOKEN }}@github.com/Sannnao/react-hook-form-docs-mcp.git" \
+            mirror-branch:master
