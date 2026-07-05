@@ -6,7 +6,7 @@
 
 AI-powered semantic search over React Native documentation for Claude, Cursor, and other MCP clients.
 
-Looking for React docs instead? See [react-docs-mcp](https://www.npmjs.com/package/react-docs-mcp).
+Also available — same engine, other docs: [react-docs-mcp](https://www.npmjs.com/package/react-docs-mcp) (React) and [react-hook-form-docs-mcp](https://www.npmjs.com/package/react-hook-form-docs-mcp) (React Hook Form).
 
 ## 🚀 Installation (One Command)
 

@@ -6,7 +6,11 @@
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
 
-> **📱 Also available: [react-native-docs-mcp](https://www.npmjs.com/package/react-native-docs-mcp)** ([standalone repo](https://github.com/Sannnao/react-native-docs-mcp)) — the same engine, but for the official React Native docs (reactnative.dev). Source lives in [`packages/react-native-docs-mcp`](https://github.com/Sannnao/react-docs-mcp/tree/master/packages/react-native-docs-mcp) in this monorepo. Both packages share one search engine, so improvements land in both.
+> **Also available — same engine, other docs:**
+> 📱 **[react-native-docs-mcp](https://www.npmjs.com/package/react-native-docs-mcp)** ([repo](https://github.com/Sannnao/react-native-docs-mcp)) — official React Native docs (reactnative.dev), with per-release version pinning
+> 📋 **[react-hook-form-docs-mcp](https://www.npmjs.com/package/react-hook-form-docs-mcp)** ([repo](https://github.com/Sannnao/react-hook-form-docs-mcp)) — official React Hook Form docs (react-hook-form.com)
+>
+> All packages share one search engine (developed in this monorepo under [`packages/`](https://github.com/Sannnao/react-docs-mcp/tree/master/packages)), so improvements land in all of them.
 
 <p align="center">
   <img src="./demo.gif" width="100%" alt="React Docs MCP Demo">
