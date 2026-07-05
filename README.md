@@ -6,7 +6,7 @@
 
 AI-powered semantic search over React documentation for Claude, Cursor, and other MCP clients.
 
-> **📱 Also in this repo: [react-native-docs-mcp](https://www.npmjs.com/package/react-native-docs-mcp)** — the same engine, but for the official React Native docs (reactnative.dev). Source lives in [`packages/react-native-docs-mcp`](./packages/react-native-docs-mcp). Both packages share one search engine, so improvements land in both.
+> **📱 Also available: [react-native-docs-mcp](https://www.npmjs.com/package/react-native-docs-mcp)** ([standalone repo](https://github.com/Sannnao/react-native-docs-mcp)) — the same engine, but for the official React Native docs (reactnative.dev). Source lives in [`packages/react-native-docs-mcp`](https://github.com/Sannnao/react-docs-mcp/tree/master/packages/react-native-docs-mcp) in this monorepo. Both packages share one search engine, so improvements land in both.
 
 <p align="center">
   <img src="./demo.gif" width="100%" alt="React Docs MCP Demo">
@@ -164,7 +164,7 @@ Pull latest documentation from the Git repository.
 npx react-docs-mcp --version   # print the installed package version and exit
 ```
 
-(Version pinning via `--docs-version` is a [react-native-docs-mcp](./packages/react-native-docs-mcp) feature — react.dev has no versioned docs.)
+(Version pinning via `--docs-version` is a [react-native-docs-mcp](https://github.com/Sannnao/react-native-docs-mcp) feature — react.dev has no versioned docs.)
 
 **Example**:
 
